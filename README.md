@@ -1,6 +1,11 @@
 # gkd
+
+-----------------------------
 golang key-value database
 
+## usage
+
+-----------------------------
 ### build server
 ```
 go build -o out/server server/server.go
@@ -14,9 +19,12 @@ go build -o out/client client/client.go
 ### run and try list
 ![gkd_2.png](https://github.com/Roderland/img/blob/master/gkd_2.png)
 
-### support command
+## support command
+
+-----------------------------
+
 + save // save data to file "test.data"
-#### str command
+### str command
 + set
 + get
 + setnx
@@ -24,7 +32,7 @@ go build -o out/client client/client.go
 + strlen
 + append
 + incrby
-#### list command
+### list command
 + lpush
 + rpush
 + lrange
