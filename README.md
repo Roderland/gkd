@@ -1,11 +1,9 @@
 # gkd
 
------------------------------
 golang key-value database
 
 ## usage
 
------------------------------
 ### build server
 ```
 go build -o out/server server/server.go
@@ -20,8 +18,6 @@ go build -o out/client client/client.go
 ![gkd_2.png](https://github.com/Roderland/img/blob/master/gkd_2.png)
 
 ## support command
-
------------------------------
 
 + save // save data to file "test.data"
 ### str command
