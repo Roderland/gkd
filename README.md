@@ -24,7 +24,7 @@ go build -o out/client client/client.go
 + strlen
 + append
 + incrby
-#### str command
+#### list command
 + lpush
 + rpush
 + lrange
