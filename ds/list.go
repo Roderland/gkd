@@ -10,4 +10,5 @@ type List interface {
 	RPop(key string) string
 	LRem(key string, count int, value string) int
 	LSet(key string, index int, value string) bool
+	ToBytes() []byte
 }

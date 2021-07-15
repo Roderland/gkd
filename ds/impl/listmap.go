@@ -2,6 +2,8 @@ package impl
 
 import (
 	"container/list"
+	"encoding/binary"
+	"gkd/entry"
 )
 
 type ListMap struct {
@@ -40,6 +42,9 @@ func (lm *ListMap) RPush(key string, value [][]byte) int {
 
 func (lm *ListMap) LRange(key string, start, end int) (values [][]byte) {
 	l := lm.obj[key]
+	if l == nil {
+		return nil
+	}
 	if start < 0 {
 		start += l.Len()
 		if start < 0 {
@@ -138,4 +143,33 @@ func (lm *ListMap) LSet(key string, index int, value string) bool {
 	}
 	p.Value = value
 	return true
+}
+
+func (lm *ListMap) ToBytes() []byte {
+	var offset int64 = 0
+	var buf []byte
+	var tmp []byte
+	for k, v := range lm.obj {
+		tmp = make([]byte, 6+len(k)+4)
+		buf = append(buf, tmp...)
+		binary.BigEndian.PutUint16(buf[offset:offset+2], entry.ListMark)
+		offset += 2
+		binary.BigEndian.PutUint32(buf[offset:offset+4], uint32(len(k)))
+		offset += 4
+		n := copy(buf[offset:], k)
+		offset += int64(n)
+		binary.BigEndian.PutUint32(buf[offset:offset+4], uint32(v.Len()))
+		offset += 4
+		for p := v.Front(); p != nil; p = p.Next() {
+			value := []byte(p.Value.(string))
+			valueSize := len(value)
+			tmp = make([]byte, 4+valueSize)
+			buf = append(buf, tmp...)
+			binary.BigEndian.PutUint32(buf[offset:offset+4], uint32(valueSize))
+			offset += 4
+			n = copy(buf[offset:], value)
+			offset += int64(valueSize)
+		}
+	}
+	return buf
 }

@@ -77,19 +77,46 @@ func (db *Database) loadData() (err error) {
 			strEntry := entry.NewStrEntry(baseEntry, valueSize, value)
 			db.strDict.Set(string(strEntry.Base.Key), string(strEntry.Value))
 		case entry.ListMark:
-
+			var listLen uint32
+			listLen, err = db.fileReader.ReadListLen()
+			if err != nil {
+				return
+			}
+			var i uint32 = 0
+			var valuesSize []uint32 = make([]uint32, listLen)
+			var values [][]byte = make([][]byte, listLen)
+			for ; i < listLen; i++ {
+				valuesSize[i], err = db.fileReader.ReadListValueSize()
+				if err != nil {
+					return
+				}
+				values[i], err = db.fileReader.ReadListValue(valuesSize[i])
+				if err != nil {
+					return
+				}
+			}
+			db.listDict.RPush(string(baseEntry.Key), values)
 		}
 	}
 }
 
 func (db *Database) SaveData(path, name string) (err error) {
-	reader, err := fr.NewFileReader(path, name)
+	writer, err := fr.NewFileWriter(path, name)
 	if err != nil {
 		return err
 	}
 	var offset int64 = 0
-	bytes := db.strDict.ToBytes()
-	_, err = reader.File.WriteAt(bytes, offset)
+	var bytes []byte
+
+	// write str entry
+	bytes = db.strDict.ToBytes()
+	_, err = writer.File.WriteAt(bytes, offset)
+	offset += int64(len(bytes))
+	// write list entry
+	bytes = db.listDict.ToBytes()
+	_, err = writer.File.WriteAt(bytes, offset)
+	offset += int64(len(bytes))
+
 	if err != nil {
 		return err
 	}

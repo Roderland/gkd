@@ -11,7 +11,7 @@ type FileReader struct {
 	Offset int64
 }
 
-func GetFile(path string, name string) (*os.File, error) {
+func GetFileForReader(path string, name string) (*os.File, error) {
 	fileName := path + string(os.PathSeparator) + name
 	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
@@ -21,7 +21,27 @@ func GetFile(path string, name string) (*os.File, error) {
 }
 
 func NewFileReader(path string, name string) (*FileReader, error) {
-	file, err := GetFile(path, name)
+	file, err := GetFileForReader(path, name)
+	if err != nil {
+		return nil, err
+	}
+	return &FileReader{
+		File:   file,
+		Offset: 0,
+	}, nil
+}
+
+func GetFileForWriter(path string, name string) (*os.File, error) {
+	fileName := path + string(os.PathSeparator) + name
+	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0644)
+	if err != nil {
+		return nil, err
+	}
+	return file, nil
+}
+
+func NewFileWriter(path string, name string) (*FileReader, error) {
+	file, err := GetFileForWriter(path, name)
 	if err != nil {
 		return nil, err
 	}
