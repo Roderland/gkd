@@ -20,4 +20,5 @@ const (
 const (
 	StrMark uint16 = iota
 	ListMark
+	HashMark
 )

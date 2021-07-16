@@ -13,6 +13,7 @@ type Database struct {
 	fileReader *fr.FileReader
 	strDict    ds.Str
 	listDict   ds.List
+	hashDict   ds.Hash
 }
 
 func NewDatabase(fileReader *fr.FileReader) *Database {
@@ -20,6 +21,7 @@ func NewDatabase(fileReader *fr.FileReader) *Database {
 		fileReader: fileReader,
 		strDict:    impl.NewStrMap(),
 		listDict:   impl.NewListMap(),
+		hashDict:   impl.NewHashMap(),
 	}
 }
 
@@ -96,6 +98,36 @@ func (db *Database) loadData() (err error) {
 				}
 			}
 			db.listDict.RPush(string(baseEntry.Key), values)
+		case entry.HashMark:
+			var hashLen uint32
+			hashLen, err = db.fileReader.ReadHashLen()
+			if err != nil {
+				return
+			}
+			var i uint32 = 0
+			var fieldsSize []uint32 = make([]uint32, hashLen)
+			var fields [][]byte = make([][]byte, hashLen)
+			var valuesSize []uint32 = make([]uint32, hashLen)
+			var values [][]byte = make([][]byte, hashLen)
+			for ; i < hashLen; i++ {
+				fieldsSize[i], err = db.fileReader.ReadHashFieldSize()
+				if err != nil {
+					return
+				}
+				fields[i], err = db.fileReader.ReadHashField(fieldsSize[i])
+				if err != nil {
+					return
+				}
+				valuesSize[i], err = db.fileReader.ReadHashValueSize()
+				if err != nil {
+					return
+				}
+				values[i], err = db.fileReader.ReadHashValue(valuesSize[i])
+				if err != nil {
+					return
+				}
+				db.hashDict.HSet(string(baseEntry.Key), string(fields[i]), string(values[i]))
+			}
 		}
 	}
 }
@@ -114,6 +146,10 @@ func (db *Database) SaveData(path, name string) (err error) {
 	offset += int64(len(bytes))
 	// write list entry
 	bytes = db.listDict.ToBytes()
+	_, err = writer.File.WriteAt(bytes, offset)
+	offset += int64(len(bytes))
+	// write hash entry
+	bytes = db.hashDict.ToBytes()
 	_, err = writer.File.WriteAt(bytes, offset)
 	offset += int64(len(bytes))
 

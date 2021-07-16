@@ -40,4 +40,10 @@ func init() {
 	RegisterCmd("rpop", RPop)
 	RegisterCmd("lrem", LRem)
 	RegisterCmd("lset", LSet)
+	/* hash command */
+	RegisterCmd("hset", HSet)
+	RegisterCmd("hget", HGet)
+	RegisterCmd("hlen", HLen)
+	RegisterCmd("hgetall", HGetAll)
+	RegisterCmd("hdel", HDel)
 }
