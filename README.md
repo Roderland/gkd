@@ -16,6 +16,8 @@ go build -o out/client client/client.go
 ![gkd_1.png](https://github.com/Roderland/img/blob/master/gkd_1.png)
 ### run and try list
 ![gkd_2.png](https://github.com/Roderland/img/blob/master/gkd_2.png)
+### run and try hash
+![gkd_3.png](https://github.com/Roderland/img/blob/master/gkd_3.png)
 
 ## support command
 
@@ -38,3 +40,9 @@ go build -o out/client client/client.go
 + rpop 
 + lrem 
 + lset 
+### hash command
++ hset
++ hget
++ hlen
++ hgetall
++ hdel
