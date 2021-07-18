@@ -3,10 +3,12 @@ package impl
 import (
 	"encoding/binary"
 	"gkd/entry"
+	"sync"
 )
 
 type HashMap struct {
-	obj map[string]map[string]string
+	obj   map[string]map[string]string
+	mutex sync.RWMutex
 }
 
 func NewHashMap() *HashMap {
@@ -16,6 +18,8 @@ func NewHashMap() *HashMap {
 }
 
 func (hm *HashMap) HSet(key, field, value string) {
+	hm.mutex.Lock()
+	defer hm.mutex.Unlock()
 	if hm.obj[key] == nil {
 		hm.obj[key] = make(map[string]string)
 	}
@@ -23,6 +27,8 @@ func (hm *HashMap) HSet(key, field, value string) {
 }
 
 func (hm *HashMap) HGet(key, field string) string {
+	hm.mutex.RLock()
+	defer hm.mutex.RUnlock()
 	if hm.obj[key] == nil {
 		return ""
 	}
@@ -30,10 +36,14 @@ func (hm *HashMap) HGet(key, field string) string {
 }
 
 func (hm *HashMap) HLen(key string) int {
+	hm.mutex.RLock()
+	defer hm.mutex.RUnlock()
 	return len(hm.obj[key])
 }
 
 func (hm *HashMap) HGetAll(key string) ([]string, []string) {
+	hm.mutex.RLock()
+	defer hm.mutex.RUnlock()
 	index := 0
 	l := len(hm.obj[key])
 	fields := make([]string, l)
@@ -47,6 +57,8 @@ func (hm *HashMap) HGetAll(key string) ([]string, []string) {
 }
 
 func (hm *HashMap) HDel(key string, fields [][]byte) int {
+	hm.mutex.Lock()
+	defer hm.mutex.Unlock()
 	m := hm.obj[key]
 	if m == nil {
 		return 0

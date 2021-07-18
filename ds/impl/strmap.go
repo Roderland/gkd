@@ -4,10 +4,12 @@ import (
 	"encoding/binary"
 	"gkd/entry"
 	"strconv"
+	"sync"
 )
 
 type StrMap struct {
-	obj map[string]string
+	obj   map[string]string
+	mutex sync.RWMutex
 }
 
 func NewStrMap() *StrMap {
@@ -17,43 +19,57 @@ func NewStrMap() *StrMap {
 }
 
 func (sm *StrMap) Set(key, value string) {
+	sm.mutex.Lock()
+	defer sm.mutex.Unlock()
 	sm.obj[key] = value
 }
 
 func (sm *StrMap) SetNx(key, value string) int {
-	if sm.Get(key) != "" {
+	sm.mutex.Lock()
+	defer sm.mutex.Unlock()
+	if sm.obj[key] != "" {
 		return 0
 	}
-	sm.Set(key, value)
+	sm.obj[key] = value
 	return 1
 }
 
 func (sm *StrMap) Get(key string) string {
+	sm.mutex.RLock()
+	defer sm.mutex.RUnlock()
 	return sm.obj[key]
 }
 
 func (sm *StrMap) GetSet(key, value string) string {
-	old := sm.Get(key)
-	sm.Set(key, value)
+	sm.mutex.Lock()
+	defer sm.mutex.Unlock()
+	old := sm.obj[key]
+	sm.obj[key] = value
 	return old
 }
 
 func (sm *StrMap) StrLen(key string) int {
-	return len(sm.Get(key))
+	sm.mutex.RLock()
+	defer sm.mutex.RUnlock()
+	return len(sm.obj[key])
 }
 
 func (sm *StrMap) Append(key, value string) int {
-	value = sm.Get(key) + value
-	sm.Set(key, value)
+	sm.mutex.Lock()
+	defer sm.mutex.Unlock()
+	value = sm.obj[key] + value
+	sm.obj[key] = value
 	return len(value)
 }
 
 func (sm *StrMap) IncrBy(key, increment string) (string, error) {
+	sm.mutex.Lock()
+	defer sm.mutex.Unlock()
 	in, err := strconv.Atoi(increment)
 	if err != nil {
 		return "increment is not a integer", err
 	}
-	va, err := strconv.Atoi(sm.Get(key))
+	va, err := strconv.Atoi(sm.obj[key])
 	if err != nil {
 		return "value is not a integer", err
 	}
@@ -62,7 +78,7 @@ func (sm *StrMap) IncrBy(key, increment string) (string, error) {
 		return "result is out of range", err
 	}
 	value := strconv.Itoa(sum)
-	sm.Set(key, value)
+	sm.obj[key] = value
 	return value, nil
 }
 

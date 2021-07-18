@@ -7,10 +7,12 @@ import (
 	"gkd/fr"
 	"io"
 	"os"
+	"sync"
 )
 
 type Database struct {
 	fileReader *fr.FileReader
+	mutex      sync.RWMutex
 	strDict    ds.Str
 	listDict   ds.List
 	hashDict   ds.Hash
@@ -133,6 +135,9 @@ func (db *Database) loadData() (err error) {
 }
 
 func (db *Database) SaveData(path, name string) (err error) {
+	db.mutex.Lock()
+	defer db.mutex.Unlock()
+
 	writer, err := fr.NewFileWriter(path, name)
 	if err != nil {
 		return err

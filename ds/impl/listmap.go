@@ -4,10 +4,12 @@ import (
 	"container/list"
 	"encoding/binary"
 	"gkd/entry"
+	"sync"
 )
 
 type ListMap struct {
-	obj map[string]*list.List
+	obj   map[string]*list.List
+	mutex sync.RWMutex
 }
 
 func NewListMap() *ListMap {
@@ -17,6 +19,8 @@ func NewListMap() *ListMap {
 }
 
 func (lm *ListMap) LPush(key string, value ...[]byte) int {
+	lm.mutex.Lock()
+	defer lm.mutex.Unlock()
 	var l *list.List
 	if l = lm.obj[key]; l == nil {
 		l = list.New()
@@ -29,6 +33,8 @@ func (lm *ListMap) LPush(key string, value ...[]byte) int {
 }
 
 func (lm *ListMap) RPush(key string, value [][]byte) int {
+	lm.mutex.Lock()
+	defer lm.mutex.Unlock()
 	var l *list.List
 	if l = lm.obj[key]; l == nil {
 		l = list.New()
@@ -41,6 +47,8 @@ func (lm *ListMap) RPush(key string, value [][]byte) int {
 }
 
 func (lm *ListMap) LRange(key string, start, end int) (values [][]byte) {
+	lm.mutex.RLock()
+	defer lm.mutex.RUnlock()
 	l := lm.obj[key]
 	if l == nil {
 		return nil
@@ -64,6 +72,8 @@ func (lm *ListMap) LRange(key string, start, end int) (values [][]byte) {
 }
 
 func (lm *ListMap) LLen(key string) int {
+	lm.mutex.RLock()
+	defer lm.mutex.RUnlock()
 	l := lm.obj[key]
 	if l == nil {
 		return 0
@@ -72,6 +82,8 @@ func (lm *ListMap) LLen(key string) int {
 }
 
 func (lm *ListMap) LIndex(key string, index int) (value string) {
+	lm.mutex.RLock()
+	defer lm.mutex.RUnlock()
 	l := lm.obj[key]
 	if index < 0 {
 		index += l.Len()
@@ -90,16 +102,22 @@ func (lm *ListMap) LIndex(key string, index int) (value string) {
 }
 
 func (lm *ListMap) LPop(key string) string {
+	lm.mutex.Lock()
+	defer lm.mutex.Unlock()
 	l := lm.obj[key]
 	return l.Remove(l.Front()).(string)
 }
 
 func (lm *ListMap) RPop(key string) string {
+	lm.mutex.Lock()
+	defer lm.mutex.Unlock()
 	l := lm.obj[key]
 	return l.Remove(l.Back()).(string)
 }
 
 func (lm *ListMap) LRem(key string, count int, value string) int {
+	lm.mutex.Lock()
+	defer lm.mutex.Unlock()
 	l := lm.obj[key]
 	res := 0
 	if count >= 0 {
@@ -128,6 +146,8 @@ func (lm *ListMap) LRem(key string, count int, value string) int {
 }
 
 func (lm *ListMap) LSet(key string, index int, value string) bool {
+	lm.mutex.Lock()
+	defer lm.mutex.Unlock()
 	l := lm.obj[key]
 	if index < 0 {
 		index += l.Len()

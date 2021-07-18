@@ -5,8 +5,6 @@ import (
 )
 
 func (db *Database) Set(key string, value string) string {
-	// entry := utils.NewEntry([]byte(key), []byte(value), utils.PUT)
-
 	db.strDict.Set(key, value)
 	return "OK"
 }
