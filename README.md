@@ -1,6 +1,6 @@
 # gkd
 
-golang key-value database
+Golang key-value database
 
 ## usage
 
